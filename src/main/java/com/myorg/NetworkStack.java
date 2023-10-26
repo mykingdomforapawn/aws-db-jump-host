@@ -6,12 +6,12 @@ import software.amazon.awscdk.StackProps;
 // import software.amazon.awscdk.Duration;
 // import software.amazon.awscdk.services.sqs.Queue;
 
-public class AwsDbJumpHostStack extends Stack {
-    public AwsDbJumpHostStack(final Construct scope, final String id) {
+public class NetworkStack extends Stack {
+    public NetworkStack(final Construct scope, final String id) {
         this(scope, id, null);
     }
 
-    public AwsDbJumpHostStack(final Construct scope, final String id, final StackProps props) {
+    public NetworkStack(final Construct scope, final String id, final StackProps props) {
         super(scope, id, props);
 
         // The code that defines your stack goes here
