@@ -26,17 +26,17 @@ public class NetworkStack extends Stack {
 
     private Vpc createVpc() {
         return Vpc.Builder.create(this, "DbJumpHostVpc")
-            .maxAzs(1)
+            .maxAzs(2)
             .createInternetGateway(false)
             .natGateways(0)
             .restrictDefaultSecurityGroup(true)
             .subnetConfiguration(
                 List.of(
                     SubnetConfiguration.builder()
-                    .name("PrivateSubnet")
-                    .subnetType(SubnetType.PRIVATE_ISOLATED)
-                    .cidrMask(24)
-                    .build()))
+                        .name("PrivateSubnet1")
+                        .subnetType(SubnetType.PRIVATE_ISOLATED)
+                        .cidrMask(24)
+                        .build()))
             .build();
     }
 
