@@ -15,7 +15,10 @@ import software.amazon.awscdk.services.ec2.SubnetSelection;
 import software.constructs.Construct;
 
 public class JumphostStack extends Stack {
-    public JumphostStack(final Construct scope, final String id, IVpc vpc) {
+
+    public final Instance jumphost;
+
+    public JumphostStack(final Construct scope, final String id, final IVpc vpc) {
         this(scope, id, null, vpc);
     }
 
@@ -23,7 +26,7 @@ public class JumphostStack extends Stack {
         super(scope, id, props);
         
         SecurityGroup jumpHostSecurityGroup = createJumpHostSecurityGroup(vpc);
-        createJumpHost(vpc, jumpHostSecurityGroup);
+        jumphost = createJumpHost(vpc, jumpHostSecurityGroup);
     }
 
     private SecurityGroup createJumpHostSecurityGroup(IVpc vpc) {

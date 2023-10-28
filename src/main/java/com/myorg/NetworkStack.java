@@ -22,7 +22,6 @@ public class NetworkStack extends Stack {
         super(scope, id, props);
 
         vpc = createVpc();
-        //this.vpc = vpc;
     }
 
     private Vpc createVpc() {
