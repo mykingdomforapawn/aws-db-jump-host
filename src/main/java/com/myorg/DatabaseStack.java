@@ -6,13 +6,11 @@ import software.amazon.awscdk.RemovalPolicy;
 import software.amazon.awscdk.Stack;
 import software.amazon.awscdk.StackProps;
 import software.amazon.awscdk.services.rds.DatabaseInstance;
-import software.amazon.awscdk.services.ec2.IConnectable;
 import software.amazon.awscdk.services.ec2.ISecurityGroup;
 import software.amazon.awscdk.services.ec2.IVpc;
 import software.amazon.awscdk.services.ec2.InstanceClass;
 import software.amazon.awscdk.services.ec2.InstanceSize;
 import software.amazon.awscdk.services.ec2.InstanceType;
-import software.amazon.awscdk.services.ec2.Port;
 import software.amazon.awscdk.services.ec2.SecurityGroup;
 import software.amazon.awscdk.services.ec2.SubnetSelection;
 import software.amazon.awscdk.services.rds.DatabaseInstanceEngine;
@@ -20,16 +18,17 @@ import software.constructs.Construct;
 
 public class DatabaseStack extends Stack{
 
-    public DatabaseStack(final Construct scope, final String id, final IVpc vpc, final IConnectable jumphost) {
-        this(scope, id, null, vpc, jumphost);
+    public final DatabaseInstance databaseInstance;
+
+    public DatabaseStack(final Construct scope, final String id, final IVpc vpc) {
+        this(scope, id, null, vpc);
     }
 
-    public DatabaseStack(final Construct scope, final String id, final StackProps props, final IVpc vpc, final IConnectable jumphost) {
+    public DatabaseStack(final Construct scope, final String id, final StackProps props, final IVpc vpc) {
         super(scope, id, props);
 
         SecurityGroup securityGroup = createDatabasetSecurityGroup(vpc);
-        DatabaseInstance databaseInstance = createDatabaseInstance(vpc, securityGroup);
-        manageConnections(databaseInstance, jumphost);
+        databaseInstance = createDatabaseInstance(vpc, securityGroup);
     }
 
     private SecurityGroup createDatabasetSecurityGroup(IVpc vpc) {
@@ -54,9 +53,5 @@ public class DatabaseStack extends Stack{
                 .instanceType(InstanceType.of(InstanceClass.M5, InstanceSize.LARGE))
                 .storageEncrypted(false)
                 .build();
-    }
-    
-    private void manageConnections(IConnectable databaseInstance, IConnectable jumphost) {
-        databaseInstance.getConnections().allowFrom(jumphost, Port.tcp(5432), "Allow postgres traffic between jumphost and database.");
     }
 }

@@ -8,8 +8,9 @@ public class AwsDbJumpHostApp {
         App app = new App();
 
         NetworkStack networkStack = new NetworkStack(app, "NetworkStack", StackProps.builder().build());
-        JumphostStack jumphostStack = new JumphostStack(app, "JumphostStack", StackProps.builder().build(), networkStack.vpc, networkStack.vpcEndpointSecurityGroup);
-        new DatabaseStack(app, "DatabaseStack",  StackProps.builder().build(), networkStack.vpc, jumphostStack.jumphost);
+        DatabaseStack databaseStack = new DatabaseStack(app, "DatabaseStack",  StackProps.builder().build(), networkStack.vpc);
+        new JumphostStack(app, "JumphostStack", StackProps.builder().build(), networkStack.vpc, networkStack.vpcEndpointSecurityGroup, databaseStack.databaseInstance);
+
         app.synth();
     }
 }

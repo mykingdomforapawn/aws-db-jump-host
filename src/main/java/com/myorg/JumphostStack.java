@@ -21,16 +21,16 @@ public class JumphostStack extends Stack {
 
     public final Instance jumphost;
 
-    public JumphostStack(final Construct scope, final String id, final Vpc vpc, final SecurityGroup vpcEndpointSecurityGroup) {
-        this(scope, id, null, vpc, vpcEndpointSecurityGroup);
+    public JumphostStack(final Construct scope, final String id, final Vpc vpc, final SecurityGroup vpcEndpointSecurityGroup, final IConnectable databaseInstace) {
+        this(scope, id, null, vpc, vpcEndpointSecurityGroup, databaseInstace);
     }
 
-    public JumphostStack(final Construct scope, final String id, final StackProps props, final Vpc vpc, final SecurityGroup vpcEndpointSecurityGroup) {
+    public JumphostStack(final Construct scope, final String id, final StackProps props, final Vpc vpc, final SecurityGroup vpcEndpointSecurityGroup, final IConnectable databaseInstace) {
         super(scope, id, props);
         
         SecurityGroup jumphostSecurityGroup = createJumphostSecurityGroup(vpc);
         jumphost = createJumpHost(vpc, jumphostSecurityGroup);
-        manageConnections(jumphost, vpcEndpointSecurityGroup);
+        manageConnections(jumphost, vpcEndpointSecurityGroup, databaseInstace);
     }
 
     private SecurityGroup createJumphostSecurityGroup(IVpc vpc) {
@@ -54,7 +54,8 @@ public class JumphostStack extends Stack {
             .build();
     }
  
-    private void manageConnections(IConnectable jumphost, IConnectable vpcEndpoinSecurityGroup) {
+    private void manageConnections(IConnectable jumphost, IConnectable vpcEndpoinSecurityGroup, IConnectable databaseInstance) {
         jumphost.getConnections().allowTo(vpcEndpoinSecurityGroup, Port.allTcp(), "Allow traffic to vpc endpoints.");
+        databaseInstance.getConnections().allowFrom(jumphost, Port.tcp(5432), "Allow postgres traffic between jumphost and database.");
     }
 }
