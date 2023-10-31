@@ -6,13 +6,20 @@ import java.util.List;
 
 import software.amazon.awscdk.Stack;
 import software.amazon.awscdk.StackProps;
+import software.amazon.awscdk.services.ec2.ISecurityGroup;
+import software.amazon.awscdk.services.ec2.IVpc;
+import software.amazon.awscdk.services.ec2.InterfaceVpcEndpointAwsService;
+import software.amazon.awscdk.services.ec2.InterfaceVpcEndpointOptions;
+import software.amazon.awscdk.services.ec2.SecurityGroup;
 import software.amazon.awscdk.services.ec2.SubnetConfiguration;
+import software.amazon.awscdk.services.ec2.SubnetSelection;
 import software.amazon.awscdk.services.ec2.SubnetType;
 import software.amazon.awscdk.services.ec2.Vpc;
 
 public class NetworkStack extends Stack {
     
     public final Vpc vpc;
+    public final SecurityGroup vpcEndpointSecurityGroup;
     
     public NetworkStack(final Construct scope, final String id) {
         this(scope, id, null);
@@ -22,6 +29,8 @@ public class NetworkStack extends Stack {
         super(scope, id, props);
 
         vpc = createVpc();
+        vpcEndpointSecurityGroup = createVpcEndpointSecurityGroup(vpc);
+        createVpcEndpoints(vpc, vpcEndpointSecurityGroup);
     }
 
     private Vpc createVpc() {
@@ -40,7 +49,21 @@ public class NetworkStack extends Stack {
             .build();
     }
 
-    public Vpc getVpc() {
-        return vpc;
+    private SecurityGroup createVpcEndpointSecurityGroup(IVpc vpc) {
+        return SecurityGroup.Builder.create(this, "vpc-endpoint-security-group")
+            .description("Security group of vpc endpoints.")
+            .allowAllOutbound(false)
+            .vpc(vpc)
+            .build();
+    }
+
+    private void createVpcEndpoints(Vpc vpc, ISecurityGroup securityGroup) {
+        vpc.addInterfaceEndpoint("ssm-endpoint", InterfaceVpcEndpointOptions.builder()
+            .service(InterfaceVpcEndpointAwsService.SSM)
+            .subnets(SubnetSelection.builder()
+                        .subnetType(SubnetType.PRIVATE_ISOLATED)
+                        .build())
+            .securityGroups(List.of(securityGroup))
+            .build());
     }
 }
