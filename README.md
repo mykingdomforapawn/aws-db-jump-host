@@ -2,7 +2,7 @@
 
 > This project is part of my software architecture journey and more specifically the cloud platforms path. See my [software-architecture-journey](https://github.com/mykingdomforapawn/software-architecture-journey) repository for more details.
 
-It is very common to deploy critical components into private subnets and restict any communication with clients outside of network. This solution implements an approach to access those resources without having to open any ports. It leverages the Systems Manager - Session Manager, AWS IAM and the Direct Connect technology.  
+It is very common to deploy critical components into private subnets and restict any communication with clients outside of the network. This solution implements an approach to access those resources without having to open any ports. It leverages the Systems Manager - Session Manager, AWS IAM and the Direct Connect technology.  
 
 ---
 
@@ -14,27 +14,41 @@ It is very common to deploy critical components into private subnets and restict
 
 ---
 
+
 ## Get started
 
-### Configure an OIDC client in the IdP
-- Create a client with a set of credentials
-- Configure one of the following redirect URIs in the IdP client
-    - https://[ALB domain name]/oauth2/idpresponse
-    - https://[ALB alias]/oauth2/idpresponse
+### Create the CDK stack
+- Set up your AWS environment for CDK (bootstrap, etc.)
+- Run `cdk deploy --all true`
+- Have a look at the solution diagram below to see what you have build
 
-### Register a domain name with Route 53
-- The OIDC integration needs to have an HTTPS listener on the ALB, which requires you to get a certificate for a domain that you own
-- Whereas the certificate registration is automated in the Cloudformation template, the domain registration has to be done manually
-- You can follow https://aws.amazon.com/de/getting-started/hands-on/get-a-domain/
+### Create an IAM entity with the required policies
+- This can be an IAM user a role passed to a SSO user or something else
+- The IAM entity that you use needs this permission: `ssm:StartSession`
+- Add the permission to an attached policy
 
-### Populate the Cloudformation template
-- The OIDC parameters can usually be found at https://[IdP domain name]/.well-known/openid-configuration
-- The ALB HTTPS listener parameters can be found in Route 53 after you registered a domain
+### Start a port forwarding session
+- Go to a terminal and set your credentials from  Identity Center or via `aws configure`
+- Run the command below in the terminal with the parameters that you can get from the AWS Console
+    - `<region>`: The AWS region you have created the stack in
+    - `<instance-id>`: This is the instance ID of the jumphost that you can get from the EC2 page in the AWS managament console
+    - `<database-endpoint`: This is the database endpointthat you can get from the RDS page in the AWS managament console
+```
+aws ssm start-session --region <region> --target <instance-id> --document-name AWS-StartPortForwardingSessionToRemoteHost --parameters '{"host":["<database-endpoint>"],"portNumber":["5432"], "localPortNumber":["5432"]}
+```
 
-### Create the Cloudformation stack
-- Create the stack and lie back
-- You can access the ALB via the registered domain name
-- Have a look at the diagram below to get a better understanding about what is going on behind the scenes
+- The terminal should now say `Waiting for connections...`
+
+### Connects to the database via the jumphost
+- You can download a client like pgAdmin to connect to the database
+- The hostname should be `127.0.0.1`
+- The port is `5432` but could be different depending on the database
+- Go to AWS Secrets Manager to get the `password`, `username` and `databasename`
+- After providing all that information you should be able to connect to your private resource without having to expose any ports to the public
+
+### Destroy and clean up the stack
+- Run `cdk destroy --all true`
+- Clean up the IAM setup that you have created
 
 ---
 
@@ -44,5 +58,6 @@ It is very common to deploy critical components into private subnets and restict
 ---
 
 ## References
-- https://aws.amazon.com/blogs/database/securely-connect-to-an-amazon-rds-or-amazon-ec2-database-instance-remotely-with-your-preferred-gui/
-- https://aws.amazon.com/blogs/aws/new-port-forwarding-using-aws-system-manager-sessions-manager/
+- [1] https://aws.amazon.com/blogs/database/securely-connect-to-an-amazon-rds-or-amazon-ec2-database-instance-remotely-with-your-preferred-gui/
+- [2] https://aws.amazon.com/blogs/aws/new-port-forwarding-using-aws-system-manager-sessions-manager/
+- [3] https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-troubleshooting.html
